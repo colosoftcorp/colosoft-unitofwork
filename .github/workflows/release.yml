@@ -6,7 +6,7 @@ on:
     - '*.*.*'
 jobs:
   release:
-    runs-on: ubuntu-latest   
+    runs-on: windows-latest   
     steps:
       - uses: actions/checkout@v2
 
@@ -16,13 +16,13 @@ jobs:
           dotnet-version: 7.0.x
 
       - name: Clean
-        run: dotnet clean -c Release -property:SolutionDir=./
+        run: dotnet clean -c Release
 
       - name: Build
-        run: dotnet build -c Release -property:SolutionDir=./
+        run: dotnet build -c Release
 
-      - name: Pack Colosoft DataServices
-        run: dotnet pack src/Colosoft.UnitOfWork/Colosoft.UnitOfWork.csproj -c Release --no-build -o ./output/nuget-package -property:SolutionDir=./
+      - name: Pack
+        run: dotnet pack -c Release
         
       - name: Publish to Nuget.org
-        run: dotnet nuget push ./output/nuget-package/*.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json
+        run: dotnet nuget push .\output\Release\*.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json
