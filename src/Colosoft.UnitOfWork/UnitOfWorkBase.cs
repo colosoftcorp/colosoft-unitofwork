@@ -8,14 +8,17 @@ namespace Colosoft
     public abstract class UnitOfWorkBase : IUnitOfWork
     {
         private readonly List<Action> afterCommitActions = new List<Action>();
+        private readonly List<Action> afterRollbackActions = new List<Action>();
+
         private bool isDisposed;
 
         public event EventHandler Disposing;
 
+        public virtual Guid Id { get; } = Guid.NewGuid();
+
         public virtual void Commit()
         {
             this.CommitCore();
-
             this.RunAfterCommitActions();
         }
 
@@ -28,11 +31,13 @@ namespace Colosoft
         public virtual void Rollback()
         {
             this.RollbackCore();
+            this.RunAfterRollbackActions();
         }
 
         public virtual async Task RollbackAsync(CancellationToken cancellationToken)
         {
             await this.RollbackAsyncCore(cancellationToken);
+            this.RunAfterRollbackActions();
         }
 
         protected virtual void Dispose(bool disposing)
@@ -54,12 +59,30 @@ namespace Colosoft
                 }
 
                 this.DisposeCore();
+
+                this.afterCommitActions.Clear();
+                this.afterRollbackActions.Clear();
             }
         }
 
         public void RegisterAfterCommitAction(Action action)
         {
+            if (action is null)
+            {
+                throw new ArgumentNullException(nameof(action));
+            }
+
             this.afterCommitActions.Add(action);
+        }
+
+        public void RegisterAfterRollbackAction(Action action)
+        {
+            if (action is null)
+            {
+                throw new ArgumentNullException(nameof(action));
+            }
+
+            this.afterRollbackActions.Add(action);
         }
 
         public void Dispose()
@@ -76,6 +99,16 @@ namespace Colosoft
             }
 
             this.afterCommitActions.Clear();
+        }
+
+        private void RunAfterRollbackActions()
+        {
+            foreach (var action in this.afterRollbackActions)
+            {
+                action();
+            }
+
+            this.afterRollbackActions.Clear();
         }
 
         protected abstract void CommitCore();

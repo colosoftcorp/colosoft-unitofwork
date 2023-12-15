@@ -8,6 +8,8 @@ namespace Colosoft
     {
         event EventHandler Disposing;
 
+        Guid Id { get; }
+
         void Commit();
 
         Task CommitAsync(CancellationToken cancellationToken);
@@ -17,5 +19,7 @@ namespace Colosoft
         Task RollbackAsync(CancellationToken cancellationToken);
 
         void RegisterAfterCommitAction(Action action);
+
+        void RegisterAfterRollbackAction(Action action);
     }
 }
